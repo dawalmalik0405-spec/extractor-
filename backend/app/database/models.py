@@ -67,3 +67,9 @@ class DocumentChunk(Base):
         Text,
         nullable=False
     )
+
+
+    vector_id = Column(
+        String,
+        nullable=True
+    )

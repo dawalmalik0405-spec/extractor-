@@ -16,6 +16,15 @@ from app.database.models import Document
 from app.extractor.extractor_factory import ExtractorFactory
 from app.chunkers.text_chunker import TextChunker
 from app.database.models import DocumentChunk
+from app.embeddings.embedding_service import (
+    EmbeddingService
+)
+
+from app.vector_db.qdrant_service import (
+    QdrantService
+)
+
+
 
 router = APIRouter(
     prefix="/documents",
@@ -97,12 +106,35 @@ async def upload_document(
 
     chunks = chunker.chunk(text)
 
+    embedding_service = EmbeddingService()
+
+    qdrant_service = QdrantService()
+
     for index, chunk in enumerate(chunks):
+
+        embedding = (
+            embedding_service.generate_embedding(
+                chunk
+            )
+        )
+
+        vector_id = (
+            qdrant_service.store_embedding(
+                embedding=embedding,
+                payload={
+                    "document_id": document.id,
+                    "filename": document.filename,
+                    "chunk_index": index,
+                    "text": chunk
+                }
+            )
+        )
 
         db_chunk = DocumentChunk(
             document_id=document.id,
             chunk_index=index,
-            content=chunk
+            content=chunk,
+            vector_id=vector_id
         )
 
         db.add(db_chunk)
