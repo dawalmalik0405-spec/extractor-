@@ -1,26 +1,39 @@
-from paddleocr import PaddleOCR
+import cv2
+import easyocr
 
 from app.extractor.base import BaseExtractor
+
+reader = easyocr.Reader(['en'])
 
 
 class ImageExtractor(BaseExtractor):
 
-    def __init__(self):
-        self.ocr = PaddleOCR(
-            use_doc_orientation_classify=False,
-            use_doc_unwarping=False,
-            use_textline_orientation=False,
-            lang="en"
-        )
-
     def extract(self, file_path: str) -> str:
 
-        result = self.ocr.predict(file_path)
+        image = cv2.imread(file_path)
 
-        texts = []
+        gray = cv2.cvtColor(
+            image,
+            cv2.COLOR_BGR2GRAY
+        )
 
-        for page in result:
-            for box in page["rec_texts"]:
-                texts.append(box)
+        gray = cv2.GaussianBlur(
+            gray,
+            (3, 3),
+            0
+        )
 
-        return "\n".join(texts)
+        _, thresh = cv2.threshold(
+            gray,
+            0,
+            255,
+            cv2.THRESH_BINARY + cv2.THRESH_OTSU
+        )
+
+
+        result = reader.readtext(
+            thresh,
+            detail=0
+        )
+
+        return "\n".join(result)
