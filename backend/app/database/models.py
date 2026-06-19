@@ -40,3 +40,30 @@ class Document(Base):
         DateTime,
         default=datetime.utcnow
     )
+
+
+
+class DocumentChunk(Base):
+
+    __tablename__ = "document_chunks"
+
+    id = Column(
+        String,
+        primary_key=True,
+        default=lambda: str(uuid.uuid4())
+    )
+
+    document_id = Column(
+        String,
+        nullable=False
+    )
+
+    chunk_index = Column(
+        Integer,
+        nullable=False
+    )
+
+    content = Column(
+        Text,
+        nullable=False
+    )

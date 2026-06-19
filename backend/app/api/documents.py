@@ -14,6 +14,8 @@ from sqlalchemy.orm import Session
 from app.database.postgres import get_db
 from app.database.models import Document
 from app.extractor.extractor_factory import ExtractorFactory
+from app.chunkers.text_chunker import TextChunker
+from app.database.models import DocumentChunk
 
 router = APIRouter(
     prefix="/documents",
@@ -71,20 +73,46 @@ async def upload_document(
             buffer
         )
 
+    extractor = ExtractorFactory.get_extractor(
+            extension
+        )
+
+    text = extractor.extract(
+            file_path
+        )
+
     document = Document(
         filename=file.filename,
         file_type=extension,
         file_path=file_path,
-        file_size=os.path.getsize(file_path)
+        file_size=os.path.getsize(file_path),
+        extracted_text=text
     )
 
     db.add(document)
     db.commit()
     db.refresh(document)
 
+    chunker = TextChunker()
+
+    chunks = chunker.chunk(text)
+
+    for index, chunk in enumerate(chunks):
+
+        db_chunk = DocumentChunk(
+            document_id=document.id,
+            chunk_index=index,
+            content=chunk
+        )
+
+        db.add(db_chunk)
+
+    db.commit()
+
     return {
         "document_id": document.id,
-        "filename": document.filename
+        "filename": document.filename,
+        "chunks_created": len(chunks)
     }
 
 
