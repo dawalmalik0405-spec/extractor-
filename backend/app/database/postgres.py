@@ -1,15 +1,14 @@
-import os
-
-from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
+from app.config.settings import DATABASE_URL
 from app.database.models import Base
 
-load_dotenv()
+engine_options = {"pool_pre_ping": True}
+if DATABASE_URL.startswith("sqlite"):
+    engine_options["connect_args"] = {"check_same_thread": False}
 
-DATABASE_URL = os.getenv("DATABASE_URL")
-
-engine = create_engine(DATABASE_URL)
+engine = create_engine(DATABASE_URL, **engine_options)
 
 SessionLocal = sessionmaker(
     autocommit=False,
@@ -19,7 +18,7 @@ SessionLocal = sessionmaker(
 
 
 def create_tables():
-  Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
 
 
 def get_db():

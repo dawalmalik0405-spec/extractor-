@@ -7,3 +7,6 @@ venv/
 __pycache__/
 *.pyc
 .env
+extractor.db
+qdrant_data/
+uploads/

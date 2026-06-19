@@ -10,6 +10,9 @@ class TextChunker:
         text: str
     ):
 
+        if not text or not text.strip():
+            return []
+
         splitter = (
             RecursiveCharacterTextSplitter(
                 chunk_size=1000,
@@ -17,5 +20,5 @@ class TextChunker:
             )
         )
 
-        return splitter.split_text(text)
+        return splitter.split_text(text.strip())
     

@@ -6,6 +6,8 @@ from app.embeddings.providers.sentence_transformer_provider import (
     SentenceTransformerProvider
 )
 
+from functools import lru_cache
+
 
 class EmbeddingService:
 
@@ -32,6 +34,11 @@ class EmbeddingService:
         return self.provider.embed_texts(
             texts
         )
+
+
+@lru_cache(maxsize=1)
+def get_embedding_service():
+    return EmbeddingService()
     
 
 

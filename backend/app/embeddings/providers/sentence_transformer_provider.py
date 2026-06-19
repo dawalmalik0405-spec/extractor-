@@ -1,7 +1,3 @@
-from sentence_transformers import (
-    SentenceTransformer
-)
-
 from app.embeddings.base import (
     EmbeddingProvider
 )
@@ -15,6 +11,8 @@ class SentenceTransformerProvider(
         self,
         model_name: str
     ):
+        from sentence_transformers import SentenceTransformer
+
         self.model = (
             SentenceTransformer(
                 model_name
@@ -26,7 +24,8 @@ class SentenceTransformerProvider(
         text: str
     ):
         return self.model.encode(
-            text
+            text,
+            normalize_embeddings=True,
         ).tolist()
 
     def embed_texts(
@@ -34,5 +33,6 @@ class SentenceTransformerProvider(
         texts: list[str]
     ):
         return self.model.encode(
-            texts
+            texts,
+            normalize_embeddings=True,
         ).tolist()

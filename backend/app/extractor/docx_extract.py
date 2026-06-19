@@ -12,4 +12,5 @@ class DOCXExtractor(BaseExtractor):
         return "\n".join(
             para.text
             for para in doc.paragraphs
-        )
+            if para.text.strip()
+        ).strip()

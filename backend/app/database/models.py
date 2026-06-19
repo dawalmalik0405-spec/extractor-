@@ -4,11 +4,12 @@ import uuid
 from sqlalchemy import (
     Column,
     DateTime,
+    ForeignKey,
     Integer,
     String,
     Text
 )
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase, relationship
 
 
 class Base(DeclarativeBase):
@@ -41,6 +42,13 @@ class Document(Base):
         default=datetime.utcnow
     )
 
+    chunks = relationship(
+        "DocumentChunk",
+        back_populates="document",
+        cascade="all, delete-orphan",
+        order_by="DocumentChunk.chunk_index",
+    )
+
 
 
 class DocumentChunk(Base):
@@ -55,7 +63,9 @@ class DocumentChunk(Base):
 
     document_id = Column(
         String,
-        nullable=False
+        ForeignKey("documents.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
 
     chunk_index = Column(
@@ -72,4 +82,9 @@ class DocumentChunk(Base):
     vector_id = Column(
         String,
         nullable=True
+    )
+
+    document = relationship(
+        "Document",
+        back_populates="chunks",
     )

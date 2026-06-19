@@ -6,7 +6,11 @@ from qdrant_client.models import (
 from qdrant_client.models import (
     PointStruct
 )
+from qdrant_client.models import PointIdsList
+from functools import lru_cache
 import uuid
+
+from app.config.settings import QDRANT_PATH
 
 
 class QdrantService:
@@ -16,10 +20,10 @@ class QdrantService:
     def __init__(self):
 
         self.client = QdrantClient(
-            path="qdrant_data"
+            path=str(QDRANT_PATH)
         )
 
-    def create_collection(self):
+    def create_collection(self, vector_size: int):
 
         collections = (
             self.client.get_collections()
@@ -36,7 +40,7 @@ class QdrantService:
         self.client.create_collection(
             collection_name=self.COLLECTION_NAME,
             vectors_config=VectorParams(
-                size=384,
+                size=vector_size,
                 distance=Distance.COSINE
             )
         )
@@ -48,6 +52,8 @@ class QdrantService:
         embedding,
         payload
     ):
+
+        self.create_collection(len(embedding))
 
         point_id = str(uuid.uuid4())
 
@@ -63,6 +69,33 @@ class QdrantService:
         )
 
         return point_id
+
+
+    def delete_vector(
+        self,
+        vector_id: str
+    ):
+
+        self.client.delete(
+            collection_name=self.COLLECTION_NAME,
+            points_selector=PointIdsList(
+                points=[vector_id]
+            )
+        )
+
+    def delete_vectors(self, vector_ids: list[str]):
+        if not vector_ids:
+            return
+
+        self.client.delete(
+            collection_name=self.COLLECTION_NAME,
+            points_selector=PointIdsList(points=vector_ids),
+        )
+
+
+@lru_cache(maxsize=1)
+def get_qdrant_service():
+    return QdrantService()
 
 
 
