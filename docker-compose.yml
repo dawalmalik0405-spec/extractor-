@@ -1,0 +1,62 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ingestion
+      POSTGRES_PASSWORD: ingestion
+      POSTGRES_DB: ingestion
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ingestion -d ingestion"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  qdrant:
+    image: qdrant/qdrant:v1.12.4
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://ingestion:ingestion@postgres:5432/ingestion
+      QDRANT_URL: http://qdrant:6333
+      QDRANT_COLLECTION: document_chunks
+      UPLOAD_DIR: /app/app/uploads
+      MAX_UPLOAD_SIZE_MB: 50
+      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+      EMBEDDING_MODEL_NAME: BAAI/bge-small-en-v1.5
+    volumes:
+      - backend_uploads:/app/app/uploads
+      - backend_models:/root/.cache
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: http://localhost:8000
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  qdrant_data:
+  backend_uploads:
+  backend_models:
