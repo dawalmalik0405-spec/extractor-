@@ -1,4 +1,6 @@
 import uuid
+from functools import lru_cache
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, Response, UploadFile, status
 from sqlalchemy.orm import Session
@@ -14,11 +16,21 @@ router = APIRouter(prefix="/documents", tags=["documents"])
 
 
 def get_embedding_service(settings: Settings = Depends(get_settings)) -> EmbeddingService:
-    return EmbeddingService(settings.embedding_model_name)
+    return _embedding_service(settings.embedding_model_name)
 
 
 def get_qdrant_service(settings: Settings = Depends(get_settings)) -> QdrantService:
-    return QdrantService(settings.qdrant_url, settings.qdrant_collection)
+    return _qdrant_service(settings.qdrant_collection, settings.qdrant_url, str(settings.qdrant_path))
+
+
+@lru_cache
+def _embedding_service(model_name: str) -> EmbeddingService:
+    return EmbeddingService(model_name)
+
+
+@lru_cache
+def _qdrant_service(collection_name: str, url: str, path: str) -> QdrantService:
+    return QdrantService(collection_name=collection_name, url=url, path=Path(path))
 
 
 def get_ingestion_service(

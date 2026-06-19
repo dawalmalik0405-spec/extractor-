@@ -6,12 +6,13 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    database_url: str = Field(default="postgresql+psycopg://ingestion:ingestion@localhost:5432/ingestion")
-    qdrant_url: str = Field(default="http://localhost:6333")
+    database_url: str = Field(default="sqlite:///./local_ingestion.db")
+    qdrant_url: str = Field(default="")
+    qdrant_path: Path = Field(default=Path("local_qdrant"))
     qdrant_collection: str = Field(default="document_chunks")
     upload_dir: Path = Field(default=Path("app/uploads"))
     max_upload_size_mb: int = Field(default=50)
-    cors_origins: str = Field(default="http://localhost:5173,http://127.0.0.1:5173")
+    cors_origins: str = Field(default="http://localhost:8000,http://127.0.0.1:8000")
     embedding_model_name: str = Field(default="BAAI/bge-small-en-v1.5")
     chunk_size: int = Field(default=1000)
     chunk_overlap: int = Field(default=100)

@@ -1,3 +1,4 @@
+from pathlib import Path
 from uuid import UUID
 
 from qdrant_client import QdrantClient
@@ -5,8 +6,14 @@ from qdrant_client.http import models
 
 
 class QdrantService:
-    def __init__(self, url: str, collection_name: str, vector_size: int = 384) -> None:
-        self.client = QdrantClient(url=url)
+    def __init__(
+        self,
+        collection_name: str,
+        url: str = "",
+        path: Path | None = None,
+        vector_size: int = 384,
+    ) -> None:
+        self.client = QdrantClient(url=url) if url else QdrantClient(path=str(path or Path("local_qdrant")))
         self.collection_name = collection_name
         self.vector_size = vector_size
 
